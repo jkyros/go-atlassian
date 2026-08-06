@@ -495,6 +495,7 @@ func New(httpClient common.HTTPClient, site string, options ...ClientOption) (*C
 	client.JQL = jql
 	client.NotificationScheme = projectNotificationScheme
 	client.Team = internal.NewTeamService(client)
+	client.JPO = internal.NewJPOPlanService(client)
 
 	client.Archival = internal.NewIssueArchivalService(client, APIVersion)
 
@@ -532,6 +533,7 @@ type Client struct {
 	JQL                *internal.JQLService
 	NotificationScheme *internal.NotificationSchemeService
 	Team               *internal.TeamService
+	JPO                *internal.JPOPlanService
 
 	Archival *internal.IssueArchivalService
 }
