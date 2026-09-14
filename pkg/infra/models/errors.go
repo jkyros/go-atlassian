@@ -47,6 +47,9 @@ var (
 	// ErrNoAdminUserToken indicates that a required user token ID was not provided
 	ErrNoAdminUserToken = errors.New("no user token id set")
 
+	// ErrNoAtlassianTeamID indicates that a required Atlassian team ID was not provided
+	ErrNoAtlassianTeamID = errors.New("no atlassian team id set")
+
 	// ErrNoBoardID indicates that a required board ID was not provided
 	ErrNoBoardID = errors.New("no board id set")
 
@@ -363,6 +366,15 @@ var (
 
 	// ErrNoLinkTypeID indicates that a required link type ID was not provided
 	ErrNoLinkTypeID = errors.New("no link type id set")
+
+	// ErrNoPlanID indicates that a required plan ID was not provided
+	ErrNoPlanID = errors.New("no plan id set")
+
+	// ErrNoPlanName indicates that a required plan name was not provided
+	ErrNoPlanName = errors.New("no plan name set")
+
+	// ErrNoPlanOnlyTeamID indicates that a required plan-only team ID was not provided
+	ErrNoPlanOnlyTeamID = errors.New("no plan-only team id set")
 
 	// ErrNoPriorityID indicates that a required priority ID was not provided
 	ErrNoPriorityID = errors.New("no priority id set")

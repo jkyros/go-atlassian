@@ -497,6 +497,12 @@ func New(httpClient common.HTTPClient, site string, options ...ClientOption) (*C
 	client.Team = internal.NewTeamService(client)
 	client.JPO = internal.NewJPOPlanService(client)
 
+	planService, err := internal.NewPlanService(client, APIVersion)
+	if err != nil {
+		return nil, err
+	}
+	client.Plan = planService
+
 	client.Archival = internal.NewIssueArchivalService(client, APIVersion)
 
 	// Apply client options
@@ -534,6 +540,7 @@ type Client struct {
 	NotificationScheme *internal.NotificationSchemeService
 	Team               *internal.TeamService
 	JPO                *internal.JPOPlanService
+	Plan               *internal.PlanService
 
 	Archival *internal.IssueArchivalService
 }

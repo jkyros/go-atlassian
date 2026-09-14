@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 // JPOPlanScheme represents a JPO (Advanced Roadmaps) plan configuration.
 type JPOPlanScheme struct {
 	ID                 int                    `json:"id"`
@@ -65,7 +67,90 @@ type JPOBacklogIssueScheme struct {
 	IssueKey       int                        `json:"issueKey"`
 	IssueSources   []int                      `json:"issueSources,omitempty"`
 	JiraValues     *JPOBacklogJiraValuesScheme `json:"jiraValues"`
-	ScenarioValues map[string]interface{}     `json:"scenarioValues,omitempty"`
+	ScenarioValues *JPOScenarioValuesScheme `json:"scenarioValues,omitempty"`
+}
+
+// JPOScenarioValuesScheme holds scenario-specific values for a backlog issue.
+// Scenario values represent the state of an issue within a plan sandbox (scenario),
+// which may differ from the committed Jira values.
+type JPOScenarioValuesScheme struct {
+	// IssueLinks contains the dependency links for this issue within the scenario.
+	// Only populated when JPOBacklogFilterScheme.IncludeIssueLinks is true.
+	IssueLinks []*JPOScenarioIssueLinkScheme `json:"issueLinks,omitempty"`
+
+	// Extras captures any additional scenario value keys not explicitly modeled.
+	Extras map[string]interface{} `json:"-"`
+}
+
+// UnmarshalJSON deserializes scenarioValues, routing known keys to typed fields
+// and capturing unknown keys in Extras.
+func (s *JPOScenarioValuesScheme) UnmarshalJSON(data []byte) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	if linksRaw, ok := raw["issueLinks"]; ok {
+		if err := json.Unmarshal(linksRaw, &s.IssueLinks); err != nil {
+			return err
+		}
+		delete(raw, "issueLinks")
+	}
+
+	if len(raw) > 0 {
+		s.Extras = make(map[string]interface{}, len(raw))
+		for k, v := range raw {
+			var val interface{}
+			if err := json.Unmarshal(v, &val); err != nil {
+				return err
+			}
+			s.Extras[k] = val
+		}
+	}
+
+	return nil
+}
+
+// MarshalJSON serializes scenarioValues, merging typed fields and Extras.
+func (s JPOScenarioValuesScheme) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{})
+
+	for k, v := range s.Extras {
+		m[k] = v
+	}
+
+	if len(s.IssueLinks) > 0 {
+		m["issueLinks"] = s.IssueLinks
+	}
+
+	return json.Marshal(m)
+}
+
+// JPOScenarioIssueLinkScheme represents a single dependency link in a JPO plan scenario.
+//
+// Item key prefixes indicate the origin of each entity:
+//   - "ji-{id}": a real Jira issue, where {id} is the Jira internal numeric ID (not the
+//     human-readable key like PROJ-123).
+//   - "si-{id}": a scenario issue created in the plan sandbox that does not yet exist in Jira.
+//   - "sl-{id}": a scenario link (dependency) created in the plan that has not yet been
+//     committed to Jira. Once committed via "Review Changes", it becomes an "il-" link.
+//   - "il-{id}": an existing issue link already committed in Jira.
+type JPOScenarioIssueLinkScheme struct {
+	// ItemKey is the identifier for the link itself (not an issue).
+	// Prefixed "sl-" for uncommitted scenario links, "il-" for committed Jira links.
+	ItemKey string `json:"itemKey"`
+
+	// SourceItemKey is the "from" issue — the origin of the dependency arrow.
+	// Typically "ji-{id}" for a real issue or "si-{id}" for a scenario issue.
+	SourceItemKey string `json:"sourceItemKey"`
+
+	// TargetItemKey is the "to" issue — the target of the dependency arrow.
+	// Typically "ji-{id}" for a real issue or "si-{id}" for a scenario issue.
+	TargetItemKey string `json:"targetItemKey"`
+
+	// Type is the Jira issue link type ID (e.g. 10000 typically means "Blocks").
+	// Verify with GET /rest/api/3/issueLinkType on your instance.
+	Type int `json:"type"`
 }
 
 // JPOBacklogJiraValuesScheme holds the JIRA field values for a backlog issue.
