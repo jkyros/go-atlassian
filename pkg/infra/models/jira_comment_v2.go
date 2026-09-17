@@ -20,6 +20,7 @@ type IssueCommentSchemeV2 struct {
 	Created      string                   `json:"created,omitempty"`      // The creation time of the comment. TODO: Should use *DateTimeScheme for proper RFC3339 formatting. Cannot change without breaking API compatibility.
 	Updated      string                   `json:"updated,omitempty"`      // The last update time of the comment. TODO: Should use *DateTimeScheme for proper RFC3339 formatting. Cannot change without breaking API compatibility.
 	Visibility   *CommentVisibilityScheme `json:"visibility,omitempty"`   // The visibility of the comment.
+	ParentID     string                   `json:"parentId,omitempty"`     // The ID of the parent comment, if this is a threaded reply.
 }
 
 // CommentPayloadSchemeV2 represents the payload for an issue comment in Jira.
